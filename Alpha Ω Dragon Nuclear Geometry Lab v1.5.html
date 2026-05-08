@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alpha Ω Dragon Nuclear Geometry Lab v1.5 Lab Console</title>
+  <style>
+    :root {
+      --bg: #06101f;
+      --panel: rgba(8, 17, 32, 0.96);
+      --panel2: rgba(20, 36, 64, 0.82);
+      --text: #eaf5ff;
+      --muted: #9fb5d2;
+      --border: #2a4166;
+      --proton: #ff8f7f;
+      --neutron: #8fb3ff;
+      --electron: #8ff0bf;
+      --strong: #ffe08a;
+      --em: #ff7f8f;
+      --weak: #caa8ff;
+      --good: #8ff0bf;
+      --warn: #ffbd73;
+      --bad: #ff7f8f;
+      --gold: #ffe08a;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      color: var(--text);
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(70, 105, 190, 0.28), transparent 42%),
+        radial-gradient(circle at 50% 50%, rgba(170, 90, 120, 0.10), transparent 48%),
+        var(--bg);
+    }
+
+    body {
+      display: grid;
+      grid-template-columns: 315px 1fr 315px;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: var(--panel);
+      padding: 14px;
+      overflow-y: auto;
+      box-shadow: 0 0 32px rgba(0,0,0,0.25);
+    }
+
+    .sidebar.left { border-right: 1px solid var(--border); }
+    .sidebar.right { border-left: 1px solid var(--border); }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(28, 50, 84, 0.75), rgba(12, 24, 46, 0.80));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 12px 34px rgba(0,0,0,0.18);
+    }
+
+    .panel h1 { margin: 0 0 6px; font-size: 20px; }
+    .panel h2 { margin: 0 0 10px; font-size: 14px; letter-spacing: 0.03em; }
+
+    .subtitle, .note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .control-group { display: grid; gap: 10px; }
+    .control { display: grid; gap: 6px; }
+
+    .control label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    input[type="range"], select { width: 100%; }
+
+    select, button {
+      width: 100%;
+      background: rgba(22, 38, 70, 0.95);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+
+    button {
+      cursor: pointer;
+      transition: background 0.12s ease, transform 0.12s ease;
+    }
+
+    button:hover {
+      background: rgba(35, 60, 104, 0.98);
+      transform: translateY(-1px);
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .main {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-width: 0;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(8, 17, 32, 0.78);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .topbar strong { font-size: 14px; }
+
+    .canvas-wrap {
+      position: relative;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background:
+        radial-gradient(circle at center, rgba(120, 175, 255, 0.11), transparent 38%),
+        radial-gradient(circle at bottom, rgba(10, 30, 55, 0.72), rgba(3, 8, 18, 0.98));
+    }
+
+    .overlay, .mode-banner {
+      position: absolute;
+      background: rgba(5, 12, 26, 0.76);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      backdrop-filter: blur(7px);
+      pointer-events: none;
+      box-shadow: 0 14px 34px rgba(0,0,0,0.22);
+    }
+
+    .overlay { left: 16px; top: 16px; max-width: 350px; }
+    .mode-banner { right: 16px; top: 16px; width: 335px; }
+
+    .overlay h3 { margin: 0 0 8px; font-size: 14px; }
+    .overlay p, .mode-banner .desc, .mode-banner .subline {
+      margin: 5px 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .mode-banner .title {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
+    .mode-banner .mode {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .stat {
+      min-height: 64px;
+      background: rgba(5, 12, 26, 0.52);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+    }
+
+    .label { color: var(--muted); font-size: 11px; margin-bottom: 4px; }
+    .value { font-size: 14px; font-weight: 800; }
+
+    .pill {
+      display: inline-block;
+      width: fit-content;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      margin: 0 6px 6px 0;
+    }
+
+    .good { color: var(--good); }
+    .warn { color: var(--warn); }
+    .bad { color: var(--bad); }
+    .gold { color: var(--gold); }
+
+    @media (max-width: 1120px) {
+      body { grid-template-columns: 285px 1fr 285px; }
+    }
+
+    @media (max-width: 980px) {
+      html, body { overflow: auto; }
+      body { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr; }
+      .sidebar.left, .sidebar.right { border: 0; border-bottom: 1px solid var(--border); max-height: 38vh; }
+      .main { min-height: 70vh; }
+      .overlay { left: 12px; right: 12px; max-width: none; }
+      .mode-banner { left: 12px; right: 12px; top: auto; bottom: 12px; width: auto; }
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar left">
+    <div class="panel">
+      <h1>Alpha Ω Dragon Nuclear Geometry Lab v1.5</h1>
+      <div class="subtitle">
+        A first-step nuclear sandbox: protons, neutrons, shell-like electrons, field overlays, and optional quark anatomy. Visual clarity first. Not a literal Standard Model solver or proof claim.<br><br><strong>v1.5:</strong> Lab Console sprint — excitation state meter, resonance history, and quick scenario presets.
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Nuclear Setup</h2>
+      <div class="control-group">
+        <div class="control">
+          <label><span>Element Preset</span><span id="presetLabel">Carbon-12</span></label>
+          <select id="preset">
+            <option value="H1">Hydrogen-1</option>
+            <option value="He4">Helium-4</option>
+            <option value="C12" selected>Carbon-12</option>
+            <option value="O16">Oxygen-16</option>
+            <option value="Fe56">Iron-56</option>
+            <option value="Au197">Gold-197</option>
+            <option value="Custom">Custom</option>
+          </select>
+        </div>
+
+        <div class="control">
+          <label><span>Protons</span><span id="protonValue">6</span></label>
+          <input id="protons" type="range" min="1" max="79" step="1" value="6" />
+        </div>
+
+        <div class="control">
+          <label><span>Neutrons</span><span id="neutronValue">6</span></label>
+          <input id="neutrons" type="range" min="0" max="118" step="1" value="6" />
+        </div>
+
+        <div class="control">
+          <label><span>Electrons</span><span id="electronValue">6</span></label>
+          <input id="electrons" type="range" min="0" max="79" step="1" value="6" />
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Interaction Controls</h2>
+      <div class="control-group">
+        <div class="control">
+          <label><span>Strong Binding</span><span id="strongValue">0.78</span></label>
+          <input id="strongForce" type="range" min="0" max="1.4" step="0.01" value="0.78" />
+        </div>
+
+        <div class="control">
+          <label><span>EM Repulsion</span><span id="emValue">0.46</span></label>
+          <input id="emForce" type="range" min="0" max="1.4" step="0.01" value="0.46" />
+        </div>
+
+        <div class="control">
+          <label><span>Weak Event Rate</span><span id="weakValue">0.12</span></label>
+          <input id="weakForce" type="range" min="0" max="1" step="0.01" value="0.12" />
+        </div>
+
+        <div class="control">
+          <label><span>Event Intensity</span><span id="eventIntensityValue">0.70</span></label>
+          <input id="eventIntensity" type="range" min="0.15" max="1.8" step="0.01" value="0.70" />
+        </div>
+
+        <div class="control">
+          <label><span>Isotope Stability Lens</span><span id="stabilityLensLabel">On</span></label>
+          <select id="stabilityLens">
+            <option value="on" selected>On</option>
+            <option value="off">Off</option>
+          </select>
+        </div>
+
+        <div class="control">
+          <label><span>Thermal Motion</span><span id="thermalValue">0.16</span></label>
+          <input id="thermal" type="range" min="0" max="1.2" step="0.01" value="0.16" />
+        </div>
+
+        <div class="control">
+          <label><span>Damping</span><span id="dampingValue">0.986</span></label>
+          <input id="damping" type="range" min="0.92" max="0.998" step="0.001" value="0.986" />
+        </div>
+
+        <div class="control">
+          <label><span>Time Step</span><span id="dtValue">0.40</span></label>
+          <input id="dt" type="range" min="0.08" max="1.0" step="0.01" value="0.40" />
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Visual Layers</h2>
+      <div class="control-group">
+        <div class="control">
+          <label><span>Electron Shells</span><span id="shellLabel">On</span></label>
+          <select id="showShells"><option value="on" selected>On</option><option value="off">Off</option></select>
+        </div>
+
+        <div class="control">
+          <label><span>Strong Links</span><span id="strongLinkLabel">On</span></label>
+          <select id="showStrongLinks"><option value="on" selected>On</option><option value="off">Off</option></select>
+        </div>
+
+        <div class="control">
+          <label><span>EM Overlay</span><span id="emOverlayLabel">On</span></label>
+          <select id="showEm"><option value="on" selected>On</option><option value="off">Off</option></select>
+        </div>
+
+        <div class="control">
+          <label><span>Quark Anatomy</span><span id="quarkLabel">On</span></label>
+          <select id="showQuarks"><option value="on" selected>On</option><option value="off">Off</option></select>
+        </div>
+
+        <div class="control">
+          <label><span>Field Heatmap</span><span id="heatLabel">Off</span></label>
+          <select id="showHeat"><option value="off" selected>Off</option><option value="on">On</option></select>
+        </div>
+
+        <div class="control">
+          <label><span>Trails</span><span id="trailValue">0.40</span></label>
+          <input id="trailStrength" type="range" min="0" max="1" step="0.01" value="0.40" />
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Scenario Presets</h2>
+      <div class="button-row">
+        <button id="stablePresetBtn">Stable Core</button>
+        <button id="hotPresetBtn">Hot Plasma</button>
+        <button id="haloPresetBtn">Neutron Halo</button>
+        <button id="stormPresetBtn">Gamma Storm</button>
+      </div>
+      <div class="note" style="margin-top: 8px;">
+        Quick lab states for live testing. These tune the sliders without changing the core code.
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Actions</h2>
+      <div class="button-row">
+        <button id="resetBtn">Reset</button>
+        <button id="pauseBtn">Pause</button>
+        <button id="pulseBtn">Pulse Field</button>
+        <button id="coolBtn">Cool</button>
+        <button id="heatBtn">Heat</button>
+        <button id="decayBtn">Random Event</button>
+        <button id="alphaBtn">Alpha Pulse</button>
+        <button id="betaBtn">Beta Pulse</button>
+        <button id="gammaBtn">Gamma Pulse</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div><strong>Goal:</strong> explore nucleus structure as a visual balance between short-range binding, proton repulsion, shell charge, and perturbation.</div>
+      <div class="subtitle">Chapter 1: nucleus + shells. Standard Model anatomy is layered in gently. v1.5 lab console active.</div>
+    </div>
+
+    <div class="canvas-wrap">
+      <canvas id="labCanvas"></canvas>
+      <div class="overlay">
+        <h3>What to watch</h3>
+        <p><strong>Core:</strong> red/gold protons and blue neutrons settle into a bounded nucleus.</p>
+        <p><strong>Gold links:</strong> short-range strong-binding-style visual links.</p>
+        <p><strong>Pink arcs:</strong> electromagnetic repulsion pressure between protons.</p>
+        <p><strong>Green shell dots:</strong> electron-shell occupancy shown as an educational visual layer.</p>
+      </div>
+      <div class="mode-banner">
+        <div class="title">Nuclear State</div>
+        <div class="mode" id="stateMode">Initializing</div>
+        <div class="desc" id="stateDesc">Seeding nucleus.</div>
+        <div class="subline" id="stateSubline">Binding: -- | Charge: --</div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="sidebar right">
+    <div class="panel">
+      <h2>Measured Readouts</h2>
+      <div class="stats">
+        <div class="stat"><div class="label">Element</div><div class="value" id="elementReadout">--</div></div>
+        <div class="stat"><div class="label">Nucleons</div><div class="value" id="nucleonReadout">--</div></div>
+        <div class="stat"><div class="label">Charge Balance</div><div class="value" id="chargeReadout">--</div></div>
+        <div class="stat"><div class="label">Binding Links</div><div class="value" id="linksReadout">--</div></div>
+        <div class="stat"><div class="label">Binding Score</div><div class="value" id="bindingReadout">--</div></div>
+        <div class="stat"><div class="label">EM Pressure</div><div class="value" id="pressureReadout">--</div></div>
+        <div class="stat"><div class="label">Nucleus Radius</div><div class="value" id="radiusReadout">--</div></div>
+        <div class="stat"><div class="label">Core Stability</div><div class="value" id="stabilityReadout">--</div></div>
+        <div class="stat"><div class="label">Shell Occupancy</div><div class="value" id="shellReadout">--</div></div>
+        <div class="stat"><div class="label">Weak Events</div><div class="value" id="weakReadout">0</div></div>
+        <div class="stat"><div class="label">Isotope Lens</div><div class="value" id="isotopeReadout">--</div></div>
+        <div class="stat"><div class="label">Field Energy</div><div class="value" id="energyReadout">--</div></div>
+        <div class="stat"><div class="label">Event Spectrum</div><div class="value" id="spectrumReadout">quiet</div></div>
+        <div class="stat"><div class="label">Excitation State</div><div class="value" id="excitationReadout">calm</div></div>
+        <div class="stat"><div class="label">Lock Timer</div><div class="value" id="lockReadout">0.0 s</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Resonance History</h2>
+      <canvas id="historyCanvas" style="width:100%;height:88px;display:block;border:1px solid var(--border);border-radius:12px;background:rgba(5,12,26,0.52);"></canvas>
+      <div class="note" id="historyNote" style="margin-top:8px;">Live field-energy trace.</div>
+    </div>
+
+    <div class="panel">
+      <h2>Status</h2>
+      <div class="pill" id="bindingPill">Binding: scanning</div>
+      <div class="pill" id="chargePill">Charge: scanning</div>
+      <div class="pill" id="fieldPill">Field: quiet</div>
+      <div class="note">
+        Visual model only: protons and neutrons are simplified nodes, electron shells are educational rings, and quark anatomy is a symbolic internal layer.
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Visual Guides</h2>
+      <div class="note">
+        <strong>Proton:</strong> positive nucleon, shown red/gold.<br>
+        <strong>Neutron:</strong> neutral nucleon, shown blue.<br>
+        <strong>Electron:</strong> shell occupancy marker, shown green.<br>
+        <strong>Strong overlay:</strong> short-range attraction/binding links.<br>
+        <strong>EM overlay:</strong> proton-proton pressure field.<br>
+        <strong>Quark layer:</strong> proton = uud, neutron = udd, shown inside each nucleon.<br>
+        <strong>Decay event:</strong> symbolic weak-interaction pulse; not a real decay calculation.<br>
+        <strong>Stability lens:</strong> compares neutron/proton balance so isotope tuning becomes visible.
+      </div>
+    </div>
+  </aside>
+
+  <script>
+    const canvas = document.getElementById('labCanvas');
+    const ctx = canvas.getContext('2d');
+    const historyCanvas = document.getElementById('historyCanvas');
+    const hctx = historyCanvas ? historyCanvas.getContext('2d') : null;
+
+    const controls = {
+      preset: document.getElementById('preset'),
+      protons: document.getElementById('protons'),
+      neutrons: document.getElementById('neutrons'),
+      electrons: document.getElementById('electrons'),
+      strongForce: document.getElementById('strongForce'),
+      emForce: document.getElementById('emForce'),
+      weakForce: document.getElementById('weakForce'),
+      eventIntensity: document.getElementById('eventIntensity'),
+      stabilityLens: document.getElementById('stabilityLens'),
+      thermal: document.getElementById('thermal'),
+      damping: document.getElementById('damping'),
+      dt: document.getElementById('dt'),
+      showShells: document.getElementById('showShells'),
+      showStrongLinks: document.getElementById('showStrongLinks'),
+      showEm: document.getElementById('showEm'),
+      showQuarks: document.getElementById('showQuarks'),
+      showHeat: document.getElementById('showHeat'),
+      trailStrength: document.getElementById('trailStrength'),
+      resetBtn: document.getElementById('resetBtn'),
+      pauseBtn: document.getElementById('pauseBtn'),
+      pulseBtn: document.getElementById('pulseBtn'),
+      coolBtn: document.getElementById('coolBtn'),
+      heatBtn: document.getElementById('heatBtn'),
+      decayBtn: document.getElementById('decayBtn'),
+      alphaBtn: document.getElementById('alphaBtn'),
+      betaBtn: document.getElementById('betaBtn'),
+      gammaBtn: document.getElementById('gammaBtn'),
+      stablePresetBtn: document.getElementById('stablePresetBtn'),
+      hotPresetBtn: document.getElementById('hotPresetBtn'),
+      haloPresetBtn: document.getElementById('haloPresetBtn'),
+      stormPresetBtn: document.getElementById('stormPresetBtn')
+    };
+
+    const labels = {
+      preset: document.getElementById('presetLabel'),
+      protons: document.getElementById('protonValue'),
+      neutrons: document.getElementById('neutronValue'),
+      electrons: document.getElementById('electronValue'),
+      strong: document.getElementById('strongValue'),
+      em: document.getElementById('emValue'),
+      weak: document.getElementById('weakValue'),
+      eventIntensity: document.getElementById('eventIntensityValue'),
+      stabilityLens: document.getElementById('stabilityLensLabel'),
+      thermal: document.getElementById('thermalValue'),
+      damping: document.getElementById('dampingValue'),
+      dt: document.getElementById('dtValue'),
+      shells: document.getElementById('shellLabel'),
+      strongLinks: document.getElementById('strongLinkLabel'),
+      emOverlay: document.getElementById('emOverlayLabel'),
+      quarks: document.getElementById('quarkLabel'),
+      heat: document.getElementById('heatLabel'),
+      trail: document.getElementById('trailValue')
+    };
+
+    const readouts = {
+      element: document.getElementById('elementReadout'),
+      nucleon: document.getElementById('nucleonReadout'),
+      charge: document.getElementById('chargeReadout'),
+      links: document.getElementById('linksReadout'),
+      binding: document.getElementById('bindingReadout'),
+      pressure: document.getElementById('pressureReadout'),
+      radius: document.getElementById('radiusReadout'),
+      stability: document.getElementById('stabilityReadout'),
+      shell: document.getElementById('shellReadout'),
+      weak: document.getElementById('weakReadout'),
+      isotope: document.getElementById('isotopeReadout'),
+      energy: document.getElementById('energyReadout'),
+      spectrum: document.getElementById('spectrumReadout'),
+      excitation: document.getElementById('excitationReadout'),
+      historyNote: document.getElementById('historyNote'),
+      lock: document.getElementById('lockReadout'),
+      bindingPill: document.getElementById('bindingPill'),
+      chargePill: document.getElementById('chargePill'),
+      fieldPill: document.getElementById('fieldPill'),
+      stateMode: document.getElementById('stateMode'),
+      stateDesc: document.getElementById('stateDesc'),
+      stateSubline: document.getElementById('stateSubline')
+    };
+
+    const PRESETS = {
+      H1: { name: 'Hydrogen-1', symbol: 'H-1', p: 1, n: 0, e: 1 },
+      He4: { name: 'Helium-4', symbol: 'He-4', p: 2, n: 2, e: 2 },
+      C12: { name: 'Carbon-12', symbol: 'C-12', p: 6, n: 6, e: 6 },
+      O16: { name: 'Oxygen-16', symbol: 'O-16', p: 8, n: 8, e: 8 },
+      Fe56: { name: 'Iron-56', symbol: 'Fe-56', p: 26, n: 30, e: 26 },
+      Au197: { name: 'Gold-197', symbol: 'Au-197', p: 79, n: 118, e: 79 },
+      Custom: { name: 'Custom Nucleus', symbol: 'Custom', p: 6, n: 6, e: 6 }
+    };
+
+    let width = 0;
+    let height = 0;
+    let paused = false;
+    let particles = [];
+    let electrons = [];
+    let links = [];
+    let pulse = 0;
+    let decayPulse = 0;
+    let weakEvents = 0;
+    let alphaEvents = 0;
+    let betaEvents = 0;
+    let gammaEvents = 0;
+    let eventFlash = [];
+    let shellShimmer = 0;
+    let lastEventType = 'quiet';
+    let resonanceHistory = [];
+    let excitationState = 'calm';
+    let lockTimer = 0;
+    let globalTime = 0;
+    const heatGrid = { cols: 74, rows: 44, data: [] };
+    heatGrid.data = new Array(heatGrid.cols * heatGrid.rows).fill(0);
+
+    function resize() {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      width = rect.width;
+      height = rect.height;
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    function fmt(n, d = 2) { return Number(n).toFixed(d); }
+    function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+    function rand(a, b) { return a + Math.random() * (b - a); }
+    function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+
+    function getParams() {
+      return {
+        preset: controls.preset.value,
+        protons: parseInt(controls.protons.value, 10),
+        neutrons: parseInt(controls.neutrons.value, 10),
+        electrons: parseInt(controls.electrons.value, 10),
+        strongForce: parseFloat(controls.strongForce.value),
+        emForce: parseFloat(controls.emForce.value),
+        weakForce: parseFloat(controls.weakForce.value),
+        eventIntensity: parseFloat(controls.eventIntensity.value),
+        stabilityLens: controls.stabilityLens.value === 'on',
+        thermal: parseFloat(controls.thermal.value),
+        damping: parseFloat(controls.damping.value),
+        dt: parseFloat(controls.dt.value),
+        showShells: controls.showShells.value === 'on',
+        showStrongLinks: controls.showStrongLinks.value === 'on',
+        showEm: controls.showEm.value === 'on',
+        showQuarks: controls.showQuarks.value === 'on',
+        showHeat: controls.showHeat.value === 'on',
+        trailStrength: parseFloat(controls.trailStrength.value)
+      };
+    }
+
+    function updateLabels() {
+      const p = getParams();
+      labels.preset.textContent = PRESETS[p.preset].symbol;
+      labels.protons.textContent = p.protons;
+      labels.neutrons.textContent = p.neutrons;
+      labels.electrons.textContent = p.electrons;
+      labels.strong.textContent = fmt(p.strongForce, 2);
+      labels.em.textContent = fmt(p.emForce, 2);
+      labels.weak.textContent = fmt(p.weakForce, 2);
+      labels.eventIntensity.textContent = fmt(p.eventIntensity, 2);
+      labels.stabilityLens.textContent = p.stabilityLens ? 'On' : 'Off';
+      labels.thermal.textContent = fmt(p.thermal, 2);
+      labels.damping.textContent = fmt(p.damping, 3);
+      labels.dt.textContent = fmt(p.dt, 2);
+      labels.shells.textContent = p.showShells ? 'On' : 'Off';
+      labels.strongLinks.textContent = p.showStrongLinks ? 'On' : 'Off';
+      labels.emOverlay.textContent = p.showEm ? 'On' : 'Off';
+      labels.quarks.textContent = p.showQuarks ? 'On' : 'Off';
+      labels.heat.textContent = p.showHeat ? 'On' : 'Off';
+      labels.trail.textContent = fmt(p.trailStrength, 2);
+    }
+
+    function applyPreset() {
+      const key = controls.preset.value;
+      if (key === 'Custom') return;
+      const preset = PRESETS[key];
+      controls.protons.value = preset.p;
+      controls.neutrons.value = preset.n;
+      controls.electrons.value = preset.e;
+      resetLab();
+    }
+
+    function makeNucleon(type, x, y, index) {
+      const total = parseInt(controls.protons.value, 10) + parseInt(controls.neutrons.value, 10);
+      const displayRadius = total > 120 ? 5.6 : total > 80 ? 7.2 : total > 35 ? 9.5 : 13;
+      return {
+        type,
+        family: 'baryon',
+        charge: type === 'proton' ? 1 : 0,
+        mass: type === 'proton' ? 1.0 : 1.02,
+        spin: 0.5,
+        x, y,
+        vx: rand(-0.25, 0.25),
+        vy: rand(-0.25, 0.25),
+        index,
+        radius: displayRadius,
+        quarkPhase: rand(0, Math.PI * 2),
+        trail: []
+      };
+    }
+
+    function resetLab() {
+      resize();
+      updateLabels();
+      const p = getParams();
+      particles = [];
+      electrons = [];
+      links = [];
+      pulse = 0;
+      decayPulse = 0;
+      eventFlash = [];
+      shellShimmer = 0;
+      lastEventType = 'quiet';
+      resonanceHistory = [];
+      excitationState = 'calm';
+      lockTimer = 0;
+      globalTime = 0;
+      heatGrid.data.fill(0);
+
+      const cx = width * 0.5;
+      const cy = height * 0.53;
+      const count = p.protons + p.neutrons;
+      const spacing = count > 120 ? 11 : count > 80 ? 14 : count > 35 ? 21 : 28;
+      let idx = 0;
+      const types = [];
+      for (let i = 0; i < p.protons; i++) types.push('proton');
+      for (let i = 0; i < p.neutrons; i++) types.push('neutron');
+      types.sort((a, b) => (a === b ? 0 : Math.random() - 0.5));
+
+      for (let i = 0; i < count; i++) {
+        const ring = Math.floor(Math.sqrt(i));
+        const angle = i * 2.399963 + ring * 0.28;
+        const r = Math.sqrt(i) * spacing * 0.62;
+        const x = cx + Math.cos(angle) * r + rand(-5, 5);
+        const y = cy + Math.sin(angle) * r + rand(-5, 5);
+        particles.push(makeNucleon(types[i], x, y, idx++));
+      }
+
+      seedElectrons(p);
+    }
+
+    function seedElectrons(p) {
+      electrons = [];
+      const cx = width * 0.5;
+      const cy = height * 0.53;
+      const shells = [2, 8, 18, 32, 50, 72];
+      let left = p.electrons;
+      let eIndex = 0;
+      for (let s = 0; s < shells.length && left > 0; s++) {
+        const cap = shells[s];
+        const inShell = Math.min(cap, left);
+        const radius = 94 + s * (p.electrons > 40 ? 33 : 52);
+        for (let i = 0; i < inShell; i++) {
+          const a = (i / Math.max(1, inShell)) * Math.PI * 2 + s * 0.38;
+          electrons.push({
+            shell: s + 1,
+            angle: a,
+            radius,
+            speed: 0.0045 + s * 0.001 + rand(-0.0008, 0.0008),
+            x: cx + Math.cos(a) * radius,
+            y: cy + Math.sin(a) * radius,
+            index: eIndex++
+          });
+        }
+        left -= inShell;
+      }
+    }
+
+    function centerOfNucleus() {
+      if (!particles.length) return { x: width * 0.5, y: height * 0.53 };
+      let sx = 0, sy = 0;
+      for (const n of particles) { sx += n.x; sy += n.y; }
+      return { x: sx / particles.length, y: sy / particles.length };
+    }
+
+    function stepPhysics() {
+      const p = getParams();
+      const dt = p.dt;
+      const center = centerOfNucleus();
+      const canvasCenter = { x: width * 0.5, y: height * 0.53 };
+      const totalNucleons = particles.length;
+      const heavyContainment = totalNucleons > 80 ? 0.010 : totalNucleons > 35 ? 0.006 : 0.003;
+      links = [];
+      let bindingPotential = 0;
+      let emPressure = 0;
+
+      for (let i = 0; i < particles.length; i++) {
+        const a = particles[i];
+        for (let j = i + 1; j < particles.length; j++) {
+          const b = particles[j];
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const r = Math.hypot(dx, dy) || 1;
+          const ux = dx / r;
+          const uy = dy / r;
+
+          const target = 31;
+          const close = Math.max(0, 1 - r / 95);
+          const bondWindow = Math.max(0, 1 - Math.abs(r - target) / 45);
+          const strong = p.strongForce * bondWindow * 0.020;
+          const stretch = (r - target) * strong;
+
+          a.vx += ux * stretch / a.mass * dt;
+          a.vy += uy * stretch / a.mass * dt;
+          b.vx -= ux * stretch / b.mass * dt;
+          b.vy -= uy * stretch / b.mass * dt;
+
+          if (bondWindow > 0.38 && r < 70) {
+            links.push({ a, b, strength: bondWindow });
+            bindingPotential += bondWindow;
+          }
+
+          const hardRepel = Math.max(0, 30 - r) * 0.022;
+          a.vx -= ux * hardRepel * dt;
+          a.vy -= uy * hardRepel * dt;
+          b.vx += ux * hardRepel * dt;
+          b.vy += uy * hardRepel * dt;
+
+          if (a.type === 'proton' && b.type === 'proton') {
+            const em = p.emForce * close * 0.052;
+            a.vx -= ux * em * dt;
+            a.vy -= uy * em * dt;
+            b.vx += ux * em * dt;
+            b.vy += uy * em * dt;
+            emPressure += close;
+          }
+        }
+      }
+
+      for (const n of particles) {
+        const dx = center.x - n.x;
+        const dy = center.y - n.y;
+        const r = Math.hypot(dx, dy) || 1;
+        const recenterX = canvasCenter.x - center.x;
+        const recenterY = canvasCenter.y - center.y;
+        n.vx += recenterX * heavyContainment * dt;
+        n.vy += recenterY * heavyContainment * dt;
+
+        const margin = 56;
+        if (n.x < margin) n.vx += (margin - n.x) * 0.006 * dt;
+        if (n.x > width - margin) n.vx -= (n.x - (width - margin)) * 0.006 * dt;
+        if (n.y < margin) n.vy += (margin - n.y) * 0.006 * dt;
+        if (n.y > height - margin) n.vy -= (n.y - (height - margin)) * 0.006 * dt;
+
+        const softBoundary = 0.0012 * Math.max(0, r - 85);
+        n.vx += (dx / r) * softBoundary * dt;
+        n.vy += (dy / r) * softBoundary * dt;
+
+        n.vx += rand(-0.02, 0.02) * p.thermal * dt;
+        n.vy += rand(-0.02, 0.02) * p.thermal * dt;
+
+        if (pulse > 0.01) {
+          n.vx += (n.x - center.x) / r * pulse * 0.040 * dt;
+          n.vy += (n.y - center.y) / r * pulse * 0.040 * dt;
+        }
+
+        n.vx *= p.damping;
+        n.vy *= p.damping;
+        n.x += n.vx * dt * 24;
+        n.y += n.vy * dt * 24;
+
+        if (totalNucleons > 80) {
+          n.x = clamp(n.x, 24, width - 24);
+          n.y = clamp(n.y, 24, height - 24);
+        }
+
+        n.trail.push({ x: n.x, y: n.y });
+        const maxTrail = Math.floor(8 + p.trailStrength * 44);
+        while (n.trail.length > maxTrail) n.trail.shift();
+      }
+
+      const shellCenter = centerOfNucleus();
+      for (const e of electrons) {
+        e.angle += e.speed * dt * 24 * (1 + 0.15 * Math.sin(globalTime * 0.015 + e.shell));
+        e.x = shellCenter.x + Math.cos(e.angle) * e.radius;
+        e.y = shellCenter.y + Math.sin(e.angle) * e.radius * 0.88;
+      }
+
+      if (Math.random() < p.weakForce * 0.0009 * dt && particles.length > 1) {
+        triggerNuclearEvent('random');
+      }
+
+      pulse *= 0.965;
+      decayPulse *= 0.952;
+      globalTime += dt;
+      return { bindingPotential, emPressure };
+    }
+
+    function isotopeLens(p) {
+      const ratio = p.protons <= 0 ? 0 : p.neutrons / p.protons;
+      const heavy = p.protons > 20;
+      const target = heavy ? 1.45 : 1.0;
+      const spread = heavy ? 0.55 : 0.42;
+      const score = clamp(1 - Math.abs(ratio - target) / spread, 0, 1);
+      let label = 'Balanced';
+      if (p.neutrons === 0 && p.protons > 1) label = 'Neutron-poor';
+      else if (score > 0.72) label = 'Balanced';
+      else if (ratio < target) label = 'Neutron-light';
+      else label = 'Neutron-heavy';
+      return { ratio, target, score, label };
+    }
+
+    function computeExcitation(metrics) {
+      const energy = metrics.kinetic + pulse + decayPulse + shellShimmer + metrics.pressureScore * 0.8 + (1 - metrics.stability) * 0.9;
+      let label = 'calm';
+      if (energy > 2.2) label = 'critical';
+      else if (energy > 1.25) label = 'excited';
+      else if (energy > 0.55) label = 'active';
+      excitationState = label;
+      resonanceHistory.push(energy);
+      if (resonanceHistory.length > 120) resonanceHistory.shift();
+      return { energy, label };
+    }
+
+    function drawHistoryGraph() {
+      if (!historyCanvas || !hctx) return;
+      const dpr = window.devicePixelRatio || 1;
+      const rect = historyCanvas.getBoundingClientRect();
+      if (historyCanvas.width !== Math.round(rect.width * dpr)) {
+        historyCanvas.width = Math.round(rect.width * dpr);
+        historyCanvas.height = Math.round(rect.height * dpr);
+        hctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      const w = rect.width;
+      const h = rect.height;
+      hctx.clearRect(0, 0, w, h);
+      hctx.fillStyle = 'rgba(5,12,26,0.58)';
+      hctx.fillRect(0, 0, w, h);
+      hctx.strokeStyle = 'rgba(159,181,210,0.16)';
+      hctx.lineWidth = 1;
+      for (let i = 1; i < 4; i++) {
+        hctx.beginPath();
+        hctx.moveTo(0, h * i / 4);
+        hctx.lineTo(w, h * i / 4);
+        hctx.stroke();
+      }
+      if (resonanceHistory.length < 2) return;
+      const maxV = Math.max(0.8, ...resonanceHistory);
+      hctx.beginPath();
+      for (let i = 0; i < resonanceHistory.length; i++) {
+        const x = (i / 119) * w;
+        const y = h - (resonanceHistory[i] / maxV) * (h - 10) - 5;
+        if (i === 0) hctx.moveTo(x, y);
+        else hctx.lineTo(x, y);
+      }
+      hctx.strokeStyle = excitationState === 'critical' ? 'rgba(255,127,143,0.95)' : excitationState === 'excited' ? 'rgba(255,224,138,0.95)' : 'rgba(120,220,255,0.92)';
+      hctx.lineWidth = 2;
+      hctx.stroke();
+    }
+
+    function computeMetrics(extra = { bindingPotential: 0, emPressure: 0 }) {
+      const p = getParams();
+      const center = centerOfNucleus();
+      const nucleons = particles.length;
+      let radius = 0;
+      let kinetic = 0;
+      for (const n of particles) {
+        radius += Math.hypot(n.x - center.x, n.y - center.y);
+        kinetic += Math.hypot(n.vx, n.vy);
+      }
+      radius = nucleons ? radius / nucleons : 0;
+      kinetic = nucleons ? kinetic / nucleons : 0;
+      const possibleLinks = Math.max(1, nucleons * 2.2);
+      const bindingScore = clamp(links.length / possibleLinks, 0, 1);
+      const ppPairs = Math.max(1, p.protons * Math.max(0, p.protons - 1) / 2);
+      const pressureScore = clamp(extra.emPressure / ppPairs, 0, 1.4);
+      const compactness = clamp(1 - Math.max(0, radius - 62) / 155, 0, 1);
+      const motionScore = clamp(1 - kinetic / 2.2, 0, 1);
+      const lens = isotopeLens(p);
+      const neutronSupport = clamp((p.neutrons + 1) / (p.protons + 1), 0, 2.2);
+      const balanceBonus = p.stabilityLens ? lens.score : clamp(1 - Math.abs(neutronSupport - 1.18) / 1.2, 0, 1);
+      const stability = clamp((bindingScore * 0.38) + (compactness * 0.24) + (motionScore * 0.22) + (balanceBonus * 0.16) - pressureScore * 0.16, 0, 1);
+      const netCharge = p.protons - p.electrons;
+      if (stability > 0.72) lockTimer += p.dt / 60;
+      else lockTimer = Math.max(0, lockTimer - p.dt / 30);
+      const excitation = computeExcitation({ center, nucleons, radius, kinetic, bindingScore, pressureScore, compactness, stability, netCharge, lens });
+      return { center, nucleons, radius, kinetic, bindingScore, pressureScore, compactness, stability, netCharge, lens, excitation };
+    }
+
+    function classify(m) {
+      if (m.lens && m.lens.score < 0.28) {
+        return { mode: m.lens.label, desc: 'The isotope balance lens is warning that the neutron/proton mix is strained.', cls: 'warn' };
+      }
+      if (m.stability > 0.78 && Math.abs(m.netCharge) <= 1) {
+        return { mode: 'Stable Core', desc: 'The nucleus is compact, linked, and near charge balance.', cls: 'good' };
+      }
+      if (m.pressureScore > 0.75) {
+        return { mode: 'Proton Pressure Rising', desc: 'Electromagnetic repulsion is pushing against the binding layer.', cls: 'warn' };
+      }
+      if (m.bindingScore < 0.18) {
+        return { mode: 'Weakly Bound', desc: 'The core is loose; stronger binding or more neutrons may help the visual lock.', cls: 'bad' };
+      }
+      if (Math.abs(m.netCharge) > 4) {
+        return { mode: 'Charged Field', desc: 'The shell balance is offset, creating a visible charge imbalance.', cls: 'warn' };
+      }
+      return { mode: 'Relaxing Nucleus', desc: 'The structure is settling through field pressure and binding links.', cls: 'gold' };
+    }
+
+    function drawBackground(p) {
+      ctx.clearRect(0, 0, width, height);
+      ctx.save();
+      const cx = width * 0.5;
+      const cy = height * 0.53;
+      const grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, Math.max(width, height) * 0.62);
+      grad.addColorStop(0, 'rgba(255,224,138,0.10)');
+      grad.addColorStop(0.33, 'rgba(104,216,255,0.07)');
+      grad.addColorStop(1, 'rgba(3,8,18,0.16)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, width, height);
+      ctx.restore();
+    }
+
+    function drawHeatmap() {
+      const p = getParams();
+      if (!p.showHeat) return;
+      for (const n of particles) {
+        const gx = Math.floor(clamp(n.x / width, 0, 0.999) * heatGrid.cols);
+        const gy = Math.floor(clamp(n.y / height, 0, 0.999) * heatGrid.rows);
+        heatGrid.data[gy * heatGrid.cols + gx] += 0.75;
+      }
+      const cellW = width / heatGrid.cols;
+      const cellH = height / heatGrid.rows;
+      let maxV = 1;
+      for (const v of heatGrid.data) maxV = Math.max(maxV, v);
+      ctx.save();
+      for (let y = 0; y < heatGrid.rows; y++) {
+        for (let x = 0; x < heatGrid.cols; x++) {
+          const v = heatGrid.data[y * heatGrid.cols + x];
+          if (v <= 0.1) continue;
+          const a = clamp(v / maxV, 0, 1) * 0.22;
+          ctx.fillStyle = `rgba(255,224,138,${a})`;
+          ctx.fillRect(x * cellW, y * cellH, cellW + 1, cellH + 1);
+          heatGrid.data[y * heatGrid.cols + x] *= 0.998;
+        }
+      }
+      ctx.restore();
+    }
+
+    function drawShells(metrics) {
+      const p = getParams();
+      if (!p.showShells) return;
+      const c = metrics.center;
+      const shellSet = [...new Set(electrons.map(e => e.shell))];
+      ctx.save();
+      for (const s of shellSet) {
+        const r = 94 + (s - 1) * (p.electrons > 40 ? 33 : 52);
+        const shimmer = shellShimmer > 0.01 ? Math.sin(globalTime * 0.22 + s) * shellShimmer * 3.5 : 0;
+        ctx.beginPath();
+        ctx.ellipse(c.x, c.y, r + shimmer, (r + shimmer) * 0.88, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = shellShimmer > 0.01 ? `rgba(120,220,255,${0.14 + shellShimmer * 0.22})` : 'rgba(143,240,191,0.18)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+      for (const e of electrons) {
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, 4.5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(143,240,191,0.92)';
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = 'rgba(143,240,191,0.6)';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+      ctx.restore();
+    }
+
+    function addEventFlash(type, x, y, color, label) {
+      eventFlash.push({ type, x, y, color, label, r: 8, life: 1, spokes: [] });
+      const count = type === 'alpha' ? 4 : type === 'beta' ? 2 : 18;
+      for (let i = 0; i < count; i++) {
+        const a = Math.PI * 2 * i / count + rand(-0.22, 0.22);
+        eventFlash[eventFlash.length - 1].spokes.push({ a, len: rand(26, 78), speed: rand(0.7, 1.8) });
+      }
+    }
+
+    function triggerNuclearEvent(kind = 'random') {
+      if (!particles.length) return;
+      const p = getParams();
+      const eventPower = p.eventIntensity;
+      const center = centerOfNucleus();
+      let type = kind;
+      if (kind === 'random') {
+        const roll = Math.random();
+        type = roll < 0.34 ? 'gamma' : roll < 0.68 ? 'beta' : 'alpha';
+      }
+
+      decayPulse = 1;
+      weakEvents += 1;
+
+      if (type === 'gamma') {
+        gammaEvents += 1;
+        lastEventType = 'gamma / energy relaxation';
+        shellShimmer = 1;
+        pulse = Math.min(1.2, pulse + 0.72 * eventPower);
+        addEventFlash('gamma', center.x, center.y, 'rgba(120,220,255,0.96)', 'γ');
+        controls.thermal.value = Math.max(0, parseFloat(controls.thermal.value) * 0.88).toFixed(2);
+        updateLabels();
+        return;
+      }
+
+      if (type === 'beta') {
+        betaEvents += 1;
+        lastEventType = 'beta / directional conversion';
+        const candidates = particles.filter(n => n.type === 'neutron');
+        const chosen = candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : particles[Math.floor(Math.random() * particles.length)];
+        chosen.vx += rand(-2.8, 2.8) * eventPower;
+        chosen.vy += rand(-2.8, 2.8) * eventPower;
+        addEventFlash('beta', chosen.x, chosen.y, 'rgba(255,180,120,0.92)', 'β');
+        pulse = Math.min(1.2, pulse + 0.30 * eventPower);
+        return;
+      }
+
+      alphaEvents += 1;
+      lastEventType = 'alpha / mass ejection';
+      const sorted = [...particles].sort((a, b) => Math.hypot(b.x - center.x, b.y - center.y) - Math.hypot(a.x - center.x, a.y - center.y));
+      for (let i = 0; i < Math.min(4, sorted.length); i++) {
+        const n = sorted[i];
+        const dx = n.x - center.x;
+        const dy = n.y - center.y;
+        const r = Math.hypot(dx, dy) || 1;
+        n.vx += (dx / r) * 4.2 * eventPower;
+        n.vy += (dy / r) * 4.2 * eventPower;
+      }
+      addEventFlash('alpha', center.x, center.y, 'rgba(255,224,138,0.92)', 'α');
+      pulse = Math.min(1.2, pulse + 0.58 * eventPower);
+    }
+
+    function updateEventFlash() {
+      for (let i = eventFlash.length - 1; i >= 0; i--) {
+        const e = eventFlash[i];
+        e.r += e.type === 'gamma' ? 4.2 : e.type === 'alpha' ? 2.7 : 3.2;
+        e.life *= 0.955;
+        for (const s of e.spokes) s.len += s.speed;
+        if (e.life < 0.035) eventFlash.splice(i, 1);
+      }
+    }
+
+    function drawEventFlash() {
+      ctx.save();
+      for (const e of eventFlash) {
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
+        ctx.strokeStyle = e.color.replace('0.92', String(e.life * 0.72));
+        ctx.lineWidth = e.type === 'gamma' ? 2.2 : 3.0;
+        ctx.stroke();
+
+        for (const s of e.spokes) {
+          const x1 = e.x + Math.cos(s.a) * e.r * 0.35;
+          const y1 = e.y + Math.sin(s.a) * e.r * 0.35;
+          const gammaBoost = e.type === 'gamma' ? 1.55 : 1;
+          const x2 = e.x + Math.cos(s.a) * (e.r + s.len * gammaBoost);
+          const y2 = e.y + Math.sin(s.a) * (e.r + s.len * gammaBoost);
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.strokeStyle = e.color.replace('0.92', String(e.life * 0.42));
+          ctx.lineWidth = 1.4;
+          ctx.stroke();
+        }
+
+        if (e.type === 'gamma') {
+          for (let k = 1; k <= 3; k++) {
+            ctx.beginPath();
+            ctx.arc(e.x, e.y, e.r + k * 28, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(120,220,255,${e.life * (0.18 / k)})`;
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+          }
+        }
+
+        ctx.font = 'bold 15px Inter, Arial';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = e.color.replace('0.92', String(e.life));
+        ctx.fillText(e.label, e.x, e.y - e.r - 8);
+      }
+      ctx.restore();
+    }
+
+    function drawField(metrics) {
+      const p = getParams();
+      const c = metrics.center;
+      ctx.save();
+      for (let i = 0; i < 4; i++) {
+        const r = 40 + i * 34 + pulse * 32 + decayPulse * 20;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, r, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255,224,138,${0.12 - i * 0.022 + pulse * 0.04})`;
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+      }
+      if (p.showEm) {
+        const protons = particles.filter(n => n.type === 'proton');
+        for (let i = 0; i < protons.length; i++) {
+          for (let j = i + 1; j < protons.length; j++) {
+            const a = protons[i];
+            const b = protons[j];
+            const r = dist(a, b);
+            if (r > 115) continue;
+            const alpha = clamp(1 - r / 115, 0, 1) * 0.26;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.strokeStyle = `rgba(255,127,143,${alpha})`;
+            ctx.lineWidth = 1.1;
+            ctx.setLineDash([3, 6]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
+        }
+      }
+      if (decayPulse > 0.01) {
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, 42 + decayPulse * 150, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(202,168,255,${decayPulse * 0.55})`;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawIsotopeHalo(metrics) {
+      const p = getParams();
+      if (!p.stabilityLens || !metrics.lens) return;
+      if (metrics.lens.score > 0.72) return;
+
+      const c = metrics.center;
+      const strain = 1 - metrics.lens.score;
+      const baseR = Math.max(58, metrics.radius + 44);
+      const neutronHeavy = metrics.lens.label === 'Neutron-heavy';
+      const neutronLight = metrics.lens.label === 'Neutron-light' || metrics.lens.label === 'Neutron-poor';
+      const color = neutronHeavy ? 'rgba(143,179,255,' : neutronLight ? 'rgba(255,143,127,' : 'rgba(255,224,138,';
+
+      ctx.save();
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        const wobble = Math.sin(globalTime * 0.045 + i * 1.7) * 7 * strain;
+        ctx.arc(c.x, c.y, baseR + i * 18 + wobble, 0, Math.PI * 2);
+        ctx.strokeStyle = color + (0.10 + strain * 0.18 - i * 0.035) + ')';
+        ctx.lineWidth = 2.2 - i * 0.35;
+        ctx.setLineDash([8 + i * 3, 10 + i * 4]);
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+      ctx.font = 'bold 12px Inter, Arial';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = color + Math.min(0.85, 0.35 + strain * 0.55) + ')';
+      ctx.fillText(metrics.lens.label, c.x, c.y - baseR - 24);
+      ctx.restore();
+    }
+
+    function drawStrongLinks() {
+      const p = getParams();
+      if (!p.showStrongLinks) return;
+      ctx.save();
+      for (const link of links) {
+        ctx.beginPath();
+        ctx.moveTo(link.a.x, link.a.y);
+        ctx.lineTo(link.b.x, link.b.y);
+        ctx.strokeStyle = `rgba(255,224,138,${0.10 + link.strength * 0.48})`;
+        ctx.lineWidth = 1.5 + link.strength * 2;
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawQuarks(n) {
+      const p = getParams();
+      if (!p.showQuarks) return;
+      const quarks = n.type === 'proton' ? ['u', 'u', 'd'] : ['u', 'd', 'd'];
+      const colors = { u: 'rgba(255,224,138,0.96)', d: 'rgba(143,240,191,0.94)' };
+      const phase = n.quarkPhase + globalTime * 0.015;
+      ctx.save();
+      for (let i = 0; i < 3; i++) {
+        const a = phase + i * Math.PI * 2 / 3;
+        const qx = n.x + Math.cos(a) * 5.4;
+        const qy = n.y + Math.sin(a) * 5.4;
+        ctx.beginPath();
+        ctx.arc(qx, qy, 2.4, 0, Math.PI * 2);
+        ctx.fillStyle = colors[quarks[i]];
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawParticles() {
+      const p = getParams();
+      ctx.save();
+      for (const n of particles) {
+        if (p.trailStrength > 0.01 && n.trail.length > 2) {
+          ctx.beginPath();
+          for (let i = 0; i < n.trail.length; i++) {
+            const t = n.trail[i];
+            if (i === 0) ctx.moveTo(t.x, t.y);
+            else ctx.lineTo(t.x, t.y);
+          }
+          ctx.strokeStyle = n.type === 'proton' ? 'rgba(255,143,127,0.18)' : 'rgba(143,179,255,0.16)';
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+        }
+      }
+
+      for (const n of particles) {
+        const isProton = n.type === 'proton';
+        const grad = ctx.createRadialGradient(n.x - 4, n.y - 4, 2, n.x, n.y, n.radius + 9);
+        if (isProton) {
+          grad.addColorStop(0, 'rgba(255,224,138,0.98)');
+          grad.addColorStop(0.45, 'rgba(255,143,127,0.94)');
+          grad.addColorStop(1, 'rgba(120,30,40,0.82)');
+        } else {
+          grad.addColorStop(0, 'rgba(234,245,255,0.95)');
+          grad.addColorStop(0.5, 'rgba(143,179,255,0.92)');
+          grad.addColorStop(1, 'rgba(45,70,140,0.82)');
+        }
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.shadowBlur = isProton ? 12 : 9;
+        ctx.shadowColor = isProton ? 'rgba(255,143,127,0.45)' : 'rgba(143,179,255,0.36)';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = 'rgba(255,255,255,0.34)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        drawQuarks(n);
+      }
+      ctx.restore();
+    }
+
+    function drawLabels(metrics) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(234,245,255,0.76)';
+      ctx.font = '11px Inter, Arial';
+      ctx.textAlign = 'center';
+      for (const n of particles) {
+        ctx.fillText(n.type === 'proton' ? 'p+' : 'n⁰', n.x, n.y + 25);
+      }
+      ctx.restore();
+    }
+
+    function shellText(eCount) {
+      const caps = [2, 8, 18, 32, 50, 72];
+      let left = eCount;
+      const parts = [];
+      for (const cap of caps) {
+        if (left <= 0) break;
+        const v = Math.min(cap, left);
+        parts.push(String(v));
+        left -= v;
+      }
+      return parts.join('-') || '0';
+    }
+
+    function updateReadouts(metrics, state) {
+      const p = getParams();
+      const preset = PRESETS[p.preset];
+      readouts.element.textContent = preset.symbol;
+      readouts.nucleon.textContent = `${p.protons + p.neutrons} (${p.protons}p/${p.neutrons}n)`;
+      readouts.charge.textContent = metrics.netCharge === 0 ? 'Neutral' : `${metrics.netCharge > 0 ? '+' : ''}${metrics.netCharge}`;
+      readouts.links.textContent = links.length;
+      readouts.binding.textContent = `${Math.round(metrics.bindingScore * 100)}%`;
+      readouts.pressure.textContent = `${Math.round(metrics.pressureScore * 100)}%`;
+      readouts.radius.textContent = `${fmt(metrics.radius, 1)} px`;
+      readouts.stability.textContent = `${Math.round(metrics.stability * 100)}%`;
+      readouts.shell.textContent = shellText(p.electrons);
+      readouts.weak.textContent = `${weakEvents} (α${alphaEvents}/β${betaEvents}/γ${gammaEvents})`;
+      readouts.isotope.textContent = p.stabilityLens ? `${metrics.lens.label} (${fmt(metrics.lens.ratio, 2)} n/p)` : 'Off';
+      readouts.energy.textContent = fmt(metrics.kinetic + pulse + decayPulse + shellShimmer, 2);
+      readouts.spectrum.textContent = lastEventType;
+      readouts.excitation.textContent = metrics.excitation.label;
+      if (readouts.historyNote) readouts.historyNote.textContent = `Trace: ${metrics.excitation.label} | Energy ${fmt(metrics.excitation.energy, 2)}`;
+      readouts.lock.textContent = `${fmt(lockTimer, 1)} s`;
+
+      readouts.stateMode.textContent = state.mode;
+      readouts.stateDesc.textContent = state.desc;
+      readouts.stateSubline.textContent = `Binding: ${Math.round(metrics.bindingScore * 100)}% | Charge: ${metrics.netCharge === 0 ? 'neutral' : metrics.netCharge}`;
+
+      readouts.bindingPill.textContent = metrics.bindingScore > 0.42 ? 'Binding: linked' : 'Binding: loose';
+      readouts.bindingPill.className = `pill ${metrics.bindingScore > 0.42 ? 'good' : 'warn'}`;
+      readouts.chargePill.textContent = Math.abs(metrics.netCharge) <= 1 ? 'Charge: balanced' : 'Charge: offset';
+      readouts.chargePill.className = `pill ${Math.abs(metrics.netCharge) <= 1 ? 'good' : 'warn'}`;
+      readouts.fieldPill.textContent = pulse > 0.12 || decayPulse > 0.12 ? 'Field: pulsing' : 'Field: quiet';
+      readouts.fieldPill.className = `pill ${pulse > 0.12 || decayPulse > 0.12 ? 'gold' : 'good'}`;
+    }
+
+    function render() {
+      const p = getParams();
+      drawBackground(p);
+      const extra = paused ? { bindingPotential: 0, emPressure: 0 } : stepPhysics();
+      const metrics = computeMetrics(extra);
+      const state = classify(metrics);
+      updateEventFlash();
+      shellShimmer *= 0.968;
+      drawHistoryGraph();
+      drawHeatmap();
+      drawShells(metrics);
+      drawField(metrics);
+      drawIsotopeHalo(metrics);
+      drawStrongLinks();
+      drawParticles();
+      drawEventFlash();
+      drawLabels(metrics);
+      updateReadouts(metrics, state);
+      requestAnimationFrame(render);
+    }
+
+    function pulseField() {
+      const total = particles.length;
+      const add = total > 80 ? 0.34 : total > 35 ? 0.55 : 0.85;
+      pulse = Math.min(1.2, pulse + add);
+    }
+    function decayEvent() { triggerNuclearEvent('random'); }
+    function alphaEvent() { triggerNuclearEvent('alpha'); }
+    function betaEvent() { triggerNuclearEvent('beta'); }
+    function gammaEvent() { triggerNuclearEvent('gamma'); }
+
+    function applyScenario(mode) {
+      if (mode === 'stable') {
+        controls.strongForce.value = '0.82';
+        controls.emForce.value = '0.36';
+        controls.thermal.value = '0.04';
+        controls.damping.value = '0.994';
+        controls.eventIntensity.value = '0.55';
+      }
+      if (mode === 'hot') {
+        controls.strongForce.value = '0.34';
+        controls.emForce.value = '0.92';
+        controls.thermal.value = '0.72';
+        controls.damping.value = '0.962';
+        controls.eventIntensity.value = '1.10';
+        pulseField();
+      }
+      if (mode === 'halo') {
+        controls.preset.value = 'Custom';
+        controls.protons.value = '12';
+        controls.neutrons.value = '34';
+        controls.electrons.value = '12';
+        controls.strongForce.value = '0.58';
+        controls.emForce.value = '0.42';
+        controls.thermal.value = '0.18';
+        controls.eventIntensity.value = '0.85';
+        resetLab();
+      }
+      if (mode === 'storm') {
+        controls.weakForce.value = '0.72';
+        controls.eventIntensity.value = '1.45';
+        controls.thermal.value = '0.34';
+        triggerNuclearEvent('gamma');
+        setTimeout(() => triggerNuclearEvent('gamma'), 140);
+        setTimeout(() => triggerNuclearEvent('beta'), 260);
+      }
+      updateLabels();
+    }
+
+    function coolField() {
+      controls.thermal.value = Math.max(0, parseFloat(controls.thermal.value) * 0.55).toFixed(2);
+      controls.damping.value = Math.min(0.998, parseFloat(controls.damping.value) + 0.006).toFixed(3);
+      updateLabels();
+    }
+
+    function heatField() {
+      const total = particles.length;
+      const heatAdd = total > 80 ? 0.06 : total > 35 ? 0.10 : 0.16;
+      controls.thermal.value = Math.min(1.2, parseFloat(controls.thermal.value) + heatAdd).toFixed(2);
+      controls.damping.value = Math.max(0.94, parseFloat(controls.damping.value) - 0.006).toFixed(3);
+      pulseField();
+      updateLabels();
+    }
+
+    controls.preset.addEventListener('change', applyPreset);
+    controls.protons.addEventListener('input', () => { controls.preset.value = 'Custom'; resetLab(); });
+    controls.neutrons.addEventListener('input', () => { controls.preset.value = 'Custom'; resetLab(); });
+    controls.electrons.addEventListener('input', () => { controls.preset.value = 'Custom'; seedElectrons(getParams()); updateLabels(); });
+
+    for (const el of [controls.strongForce, controls.emForce, controls.weakForce, controls.eventIntensity, controls.stabilityLens, controls.thermal, controls.damping, controls.dt, controls.showShells, controls.showStrongLinks, controls.showEm, controls.showQuarks, controls.showHeat, controls.trailStrength]) {
+      el.addEventListener('input', updateLabels);
+      el.addEventListener('change', updateLabels);
+    }
+
+    controls.resetBtn.addEventListener('click', resetLab);
+    controls.pauseBtn.addEventListener('click', () => {
+      paused = !paused;
+      controls.pauseBtn.textContent = paused ? 'Run' : 'Pause';
+    });
+    controls.pulseBtn.addEventListener('click', pulseField);
+    controls.coolBtn.addEventListener('click', coolField);
+    controls.heatBtn.addEventListener('click', heatField);
+    controls.decayBtn.addEventListener('click', decayEvent);
+    controls.alphaBtn.addEventListener('click', alphaEvent);
+    controls.betaBtn.addEventListener('click', betaEvent);
+    controls.gammaBtn.addEventListener('click', gammaEvent);
+    controls.stablePresetBtn.addEventListener('click', () => applyScenario('stable'));
+    controls.hotPresetBtn.addEventListener('click', () => applyScenario('hot'));
+    controls.haloPresetBtn.addEventListener('click', () => applyScenario('halo'));
+    controls.stormPresetBtn.addEventListener('click', () => applyScenario('storm'));
+
+    resetLab();
+    render();
+  </script>
+</body>
+</html>
